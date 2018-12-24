@@ -23,6 +23,7 @@ namespace DatingApp.API.Controllers {
         private readonly IAuthRepository _repo;
         private readonly IConfiguration _config;
 
+        // la dependency injection dei repository o della configurazione nel controller fa parte degli API controller e quindi non serve più Castle.Windsor (o altri ioc container)
         public AuthController(IAuthRepository repo, IConfiguration config) {
             _repo = repo;
             _config = config;
@@ -47,6 +48,10 @@ namespace DatingApp.API.Controllers {
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserForLoginDto userForLoginDto) {
+
+            // le eccezioni vengono gestite da un handler globale definito in Startup.cs
+            //throw new Exception("AuthController -> Login says NO!");
+
             var userFromRepo = await _repo.Login(userForLoginDto.Username.ToLower(), userForLoginDto.Password);
 
             if (userFromRepo == null) return Unauthorized();
@@ -75,6 +80,7 @@ namespace DatingApp.API.Controllers {
             return Ok(new {
                 token = tokenHandler.WriteToken(token)
             });
+
         }
     }
             

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using DatingApp.API.Data;
 using DatingApp.API.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -31,12 +32,24 @@ namespace DatingApp.API {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             // read from appsettings.json
+            // registra il provider EF per SQLite
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+            .AddJsonOptions(opt => {
+                opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+            
             // enable cross domain calls to API
             services.AddCors();
-            // lifetime per HTTP request
+            // automapper
+            services.AddAutoMapper();
+            // registra la classe per il popolamento iniziale del DB
+            services.AddTransient<Seed>();
+            
+            // vengono registrati i repository con lifetime per HTTP request
             services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IDatingRepository, DatingRepository>();
 
             // configurazione autenticazione delle Request HTTP tramite token JWT
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).
@@ -51,7 +64,7 @@ namespace DatingApp.API {
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, Seed seeder) {
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
@@ -72,8 +85,13 @@ namespace DatingApp.API {
             }
 
             //app.UseHttpsRedirection();
+            // call the database seed method to insert test data
+            // seeder.SeedUsers();
+
             // enable cross domain calls to API (everything is permitted)
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+            // abilita l'autenticazione per le chiamata ai metodi delle API
             app.UseAuthentication();
             app.UseMvc();
         }

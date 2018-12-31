@@ -22,6 +22,7 @@ export class MemberDetailComponent implements OnInit {
       this.user = data['user'];
     });
 
+    // photo gallery component options
     this.galleryOptions = [
       {
         width: '500px',
@@ -35,6 +36,7 @@ export class MemberDetailComponent implements OnInit {
     this.galleryImages = this.getImages();
   }
 
+  // get array of images for the photo gallery
   getImages() {
     const imageUrls = [];
     for (let i = 0; i < this.user.photos.length; i++) {

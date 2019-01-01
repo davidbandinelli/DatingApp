@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using DatingApp.API.Data;
 using DatingApp.API.Dtos;
 using DatingApp.API.Models;
@@ -22,11 +23,13 @@ namespace DatingApp.API.Controllers {
         //private readonly DataContext _context;
         private readonly IAuthRepository _repo;
         private readonly IConfiguration _config;
+        private readonly IMapper _mapper;
 
         // la dependency injection dei repository o della configurazione nel controller fa parte degli API controller e quindi non serve più Castle.Windsor (o altri ioc container)
-        public AuthController(IAuthRepository repo, IConfiguration config) {
+        public AuthController(IAuthRepository repo, IConfiguration config, IMapper mapper) {
             _repo = repo;
             _config = config;
+            _mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -75,10 +78,13 @@ namespace DatingApp.API.Controllers {
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
+            var user = _mapper.Map<UserForListDto>(userFromRepo);
+
             // token restituito nella response
             // il token può essere verificato sul sito https://jwt.io/
             return Ok(new {
-                token = tokenHandler.WriteToken(token)
+                token = tokenHandler.WriteToken(token),
+                user
             });
 
         }

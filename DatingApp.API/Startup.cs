@@ -42,6 +42,8 @@ namespace DatingApp.API {
             
             // enable cross domain calls to API
             services.AddCors();
+            // cloudinary settings
+            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             // automapper
             services.AddAutoMapper();
             // registra la classe per il popolamento iniziale del DB

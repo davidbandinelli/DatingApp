@@ -15,6 +15,7 @@ export class MemberEditComponent implements OnInit {
   // accesso alla form
   @ViewChild('editForm') editForm: NgForm;
   user: User;
+  photoUrl: string;
   // gestione evento abbandono finestra browser mentre l'edit è in corso
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
@@ -31,6 +32,8 @@ export class MemberEditComponent implements OnInit {
     this.route.data.subscribe(data => {
       this.user = data['user'];
     });
+    this.authService.currentPhotourl.subscribe(photoUrl => this.photoUrl = photoUrl);
+
   }
 
   updateUser() {
@@ -41,6 +44,11 @@ export class MemberEditComponent implements OnInit {
     }, error => {
       this.alertify.error(error);
     });
+  }
+
+  // event handler proveniente dal child component (photo-editor) per intercettare il cambio di main photo
+  updateMainPhoto(photoUrl) {
+    this.user.photoUrl = photoUrl;
   }
 
 }

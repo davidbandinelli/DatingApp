@@ -9,6 +9,7 @@ namespace DatingApp.API.Models
 
         public DateTime DateAdded { get; set; }
         public bool IsMain { get; set; }
+        public string PublicId { get; set; }
         // in EF core aggiungendo la relazione inversa otteniamo la delete cascade (sulla tabella Photo) e lo UserId not nullable
         public User User { get; set; }
         public int UserId { get; set; }

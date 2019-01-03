@@ -37,13 +37,13 @@
       <div class="tab-panel">
         <tabset class="member-tabset">
           <tab heading="About {{user?.knownAs}}">
-            <h4>Description</h4>
+            <h4 *ngIf="user.introduction !== null && user.introduction !== ''">Description</h4>
             <p>{{user.introduction}}</p>
-            <h4>Looking For</h4>
+            <h4 *ngIf="user.lookingFor !== null && user.lookingFor !== ''">Looking For</h4>
             <p>{{user.lookingFor}}</p>
           </tab>
           <tab heading="Interests">
-              <h4>Interests</h4>
+              <h4 *ngIf="user.interests !== null && user.interests !== ''">Interests</h4>
               <p>{{user.interests}}</p>
           </tab>
           <tab heading="Photos">
@@ -57,3 +57,5 @@
     </div>
   </div>
 </div>
+
+

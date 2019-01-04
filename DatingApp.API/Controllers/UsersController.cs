@@ -5,23 +5,23 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DatingApp.API.Data;
 using DatingApp.API.Dtos;
+using DatingApp.API.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DatingApp.API.Controllers
 {
+    [ServiceFilter(typeof(LogUserActivity))]
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     // ControllerBase is for viewless controllers (API)
-    public class UsersController : ControllerBase
-    {
+    public class UsersController : ControllerBase {
         // automapper
         private readonly IMapper _mapper;
 
         private readonly IDatingRepository _repo;
-        public UsersController(IDatingRepository repo, IMapper mapper)
-        {
+        public UsersController(IDatingRepository repo, IMapper mapper) {
             _mapper = mapper;
             _repo = repo;
         }

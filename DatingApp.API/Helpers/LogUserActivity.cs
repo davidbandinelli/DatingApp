@@ -7,8 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DatingApp.API.Helpers
 {
-    public class LogUserActivity : IAsyncActionFilter
-    {
+    // HttpRequest filter (dal contesto recupera i dati dell'utente dal token JWT e il repository tramite DI) 
+    // poi aggiorna la data ultima attività sul DB
+    public class LogUserActivity : IAsyncActionFilter {
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next) {
             var resultContext = await next();
             // dopo che la HTTP request è stata completata il codice seguente viene eseguito

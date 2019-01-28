@@ -25,6 +25,9 @@ namespace DatingApp.API.Models
         // relazione 1:N (un utente può piacere a 0:N utenti)
         public ICollection<Like> Likees { get; set; }
 
+        public ICollection<Message> MessagesSent { get; set; }
+        public ICollection<Message> MessagesReceived { get; set; }
+
 
     }
 }

@@ -13,6 +13,6 @@ namespace DatingApp.API.Models
         // in EF core aggiungendo la relazione inversa otteniamo la delete cascade (sulla tabella Photo) e lo UserId not nullable
         public User User { get; set; }
         public int UserId { get; set; }
-
+        public bool IsApproved { get; set; }
     }
 }

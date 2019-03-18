@@ -7,13 +7,17 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DatingApp.API.Data;
 using DatingApp.API.Helpers;
+using DatingApp.API.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -37,24 +41,21 @@ namespace DatingApp.API {
             services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                 .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.IncludeIgnoredWarning)));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-            .AddJsonOptions(opt => {
-                opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            // ASP.NET Core Identity configuration
+            IdentityBuilder builder = services.AddIdentityCore<User>(opt =>
+            {
+                opt.Password.RequireDigit = false;
+                opt.Password.RequiredLength = 4;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequireUppercase = false;
             });
-            
-            // enable cross domain calls to API
-            services.AddCors();
-            // cloudinary settings
-            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
-            // automapper
-            services.AddAutoMapper();
-            // registra la classe per il popolamento iniziale del DB
-            services.AddTransient<Seed>();
-            
-            // vengono registrati i repository con lifetime per HTTP request
-            services.AddScoped<IAuthRepository, AuthRepository>();
-            services.AddScoped<IDatingRepository, DatingRepository>();
 
+            builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
+            // Identity utilizza EF come store
+            builder.AddEntityFrameworkStores<DataContext>();
+            builder.AddRoleValidator<RoleValidator<Role>>();
+            builder.AddRoleManager<RoleManager<Role>>();
+            builder.AddSignInManager<SignInManager<User>>();
             // configurazione autenticazione delle Request HTTP tramite token JWT
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).
                 AddJwtBearer(options => {
@@ -65,6 +66,40 @@ namespace DatingApp.API {
                         ValidateAudience = false
                     };
             });
+            // policy based authorization
+            services.AddAuthorization(opt => {
+                opt.AddPolicy("RequireAdminRole", pol => pol.RequireRole("Admin"));
+                opt.AddPolicy("ModeratePhotoRole", pol => pol.RequireRole("Admin", "Moderator"));
+                opt.AddPolicy("VipOnly", pol => pol.RequireRole("VIP"));
+            });
+
+            services.AddMvc(options => 
+                {
+                    var policy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+                    options.Filters.Add(new AuthorizeFilter(policy));
+                }
+            )
+            .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+            .AddJsonOptions(opt => {
+                opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+            
+            // enable cross domain calls to API
+            services.AddCors();
+            // cloudinary settings
+            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
+            // automapper
+            Mapper.Reset();
+            services.AddAutoMapper();
+            // registra la classe per il popolamento iniziale del DB
+            services.AddTransient<Seed>();
+            
+            // vengono registrati i repository con lifetime per HTTP request
+            //services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IDatingRepository, DatingRepository>();
+
             services.AddScoped<LogUserActivity>();
         }
 
@@ -83,12 +118,13 @@ namespace DatingApp.API {
             // cloudinary settings
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             // automapper
+            Mapper.Reset();
             services.AddAutoMapper();
             // registra la classe per il popolamento iniziale del DB
             services.AddTransient<Seed>();
             
             // vengono registrati i repository con lifetime per HTTP request
-            services.AddScoped<IAuthRepository, AuthRepository>();
+            //services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddScoped<IDatingRepository, DatingRepository>();
 
             // configurazione autenticazione delle Request HTTP tramite token JWT
@@ -127,7 +163,7 @@ namespace DatingApp.API {
 
             //app.UseHttpsRedirection();
             // call the database seed method to insert test data
-            // seeder.SeedUsers();
+            seeder.SeedUsers();
 
             // enable cross domain calls to API (everything is permitted)
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());

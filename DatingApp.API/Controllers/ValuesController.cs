@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 namespace DatingApp.API.Controllers {
 
     // GET http://loalhost:5000/api/values
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     // ControllerBase is for viewless controllers (API)
@@ -21,7 +20,7 @@ namespace DatingApp.API.Controllers {
         }
 
         // GET api/values
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin, Moderator")]
         [HttpGet]
         public async Task<IActionResult> GetValues() {
             var values = await _context.Values.ToListAsync();
@@ -30,7 +29,7 @@ namespace DatingApp.API.Controllers {
         }
 
         // GET api/values/5
-        [AllowAnonymous]
+        [Authorize(Roles = "Member")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetValue(int id) {
             var value = await _context.Values.FirstOrDefaultAsync(x => x.Id == id);

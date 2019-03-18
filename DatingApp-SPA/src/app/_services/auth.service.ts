@@ -48,4 +48,16 @@ export class AuthService {
     // il token viene controllato tramite la libreria angular-jwt (espone un service)
     return !this.jwtHelper.isTokenExpired(token);
   }
+
+  roleMatch(allowedRoles): boolean {
+    let isMatch = false;
+    const userRoles = this.decodedToken.role as Array<string>;
+    allowedRoles.forEach(element => {
+      if (userRoles.includes(element)) {
+        isMatch = true;
+        return;
+      }
+    });
+    return isMatch;
+  }
 }

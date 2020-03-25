@@ -1,0 +1,13 @@
+Per far partire il backend:
+
+PS C:\formazione\angular\DatingApp\DatingApp.API> $env:ASPNETCORE_ENVIRONMENT='Production'
+PS C:\formazione\angular\DatingApp\DatingApp.API> dotnet ef database update
+dotnet run
+il backend parte su http://localhost:5000
+
+
+Per far partire il frontend
+npm install
+ng serve
+
+accedere a http://localhost:4200/

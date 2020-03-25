@@ -38,9 +38,9 @@ namespace DatingApp.API {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             // read from appsettings.json
+
             // registra il provider EF per SqlServer
-            services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
-                .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.IncludeIgnoredWarning)));
+            services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             // ASP.NET Core Identity configuration
             IdentityBuilder builder = services.AddIdentityCore<User>(opt =>
@@ -57,6 +57,7 @@ namespace DatingApp.API {
             builder.AddRoleValidator<RoleValidator<Role>>();
             builder.AddRoleManager<RoleManager<Role>>();
             builder.AddSignInManager<SignInManager<User>>();
+
             // configurazione autenticazione delle Request HTTP tramite token JWT
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).
                 AddJwtBearer(options => {
@@ -67,6 +68,7 @@ namespace DatingApp.API {
                         ValidateAudience = false
                     };
             });
+
             // policy based authorization
             services.AddAuthorization(opt => {
                 opt.AddPolicy("RequireAdminRole", pol => pol.RequireRole("Admin"));
@@ -89,13 +91,16 @@ namespace DatingApp.API {
             
             // enable cross domain calls to API
             services.AddCors();
-            // cloudinary settings
+            
+            // cloudinary settings (utilizzato per lo storage di file sul cloud provider)
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
+
             // automapper
             //Mapper.Reset();
             services.AddAutoMapper(typeof(DatingRepository).Assembly);
+            
             // registra la classe per il popolamento iniziale del DB
-            services.AddTransient<Seed>();
+            //services.AddTransient<Seed>();
             
             // vengono registrati i repository con lifetime per HTTP request
             //services.AddScoped<IAuthRepository, AuthRepository>();
@@ -106,6 +111,7 @@ namespace DatingApp.API {
 
         public void ConfigureDevelopmentServices(IServiceCollection services) {
             // read from appsettings.json
+
             // registra il provider EF per SQLite
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
@@ -121,13 +127,16 @@ namespace DatingApp.API {
 
             // enable cross domain calls to API
             services.AddCors();
+
             // cloudinary settings
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
+
             // automapper
             //Mapper.Reset();
             services.AddAutoMapper(typeof(DatingRepository).Assembly);
+
             // registra la classe per il popolamento iniziale del DB
-            services.AddTransient<Seed>();
+            //services.AddTransient<Seed>();
             
             // vengono registrati i repository con lifetime per HTTP request
             //services.AddScoped<IAuthRepository, AuthRepository>();
@@ -166,32 +175,27 @@ namespace DatingApp.API {
                 });
                 //app.UseHsts();
             }
-
             //app.UseHttpsRedirection();
+
             // call the database seed method to insert test data
             //seeder.SeedUsers();
 
             // enable cross domain calls to API (everything is permitted)
             app.UseRouting();
+
             // abilita l'autenticazione per le chiamata ai metodi delle API
             app.UseAuthentication();
             app.UseAuthorization();
+
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
+            
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();
                 endpoints.MapFallbackToController("Index", "Fallback");
             });
-            /*
-            app.UseMvc(routes => {
-                routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new { controller = "Fallback", action = "Index" }
-                );
-            });
-            */
         }
     }
 }

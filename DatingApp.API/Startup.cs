@@ -25,6 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Hosting;
 
 namespace DatingApp.API {
     public class Startup {
@@ -81,8 +82,8 @@ namespace DatingApp.API {
                     options.Filters.Add(new AuthorizeFilter(policy));
                 }
             )
-            .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-            .AddJsonOptions(opt => {
+            .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+            .AddNewtonsoftJson(opt => {
                 opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
             
@@ -91,8 +92,8 @@ namespace DatingApp.API {
             // cloudinary settings
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             // automapper
-            Mapper.Reset();
-            services.AddAutoMapper();
+            //Mapper.Reset();
+            services.AddAutoMapper(typeof(DatingRepository).Assembly);
             // registra la classe per il popolamento iniziale del DB
             services.AddTransient<Seed>();
             
@@ -108,18 +109,23 @@ namespace DatingApp.API {
             // registra il provider EF per SQLite
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+            services.AddControllers().AddNewtonsoftJson(opt => {
+                opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+            /*
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
             .AddJsonOptions(opt => {
                 opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
-            
+            */
+
             // enable cross domain calls to API
             services.AddCors();
             // cloudinary settings
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             // automapper
-            Mapper.Reset();
-            services.AddAutoMapper();
+            //Mapper.Reset();
+            services.AddAutoMapper(typeof(DatingRepository).Assembly);
             // registra la classe per il popolamento iniziale del DB
             services.AddTransient<Seed>();
             
@@ -141,7 +147,7 @@ namespace DatingApp.API {
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, Seed seeder) {
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
@@ -163,21 +169,29 @@ namespace DatingApp.API {
 
             //app.UseHttpsRedirection();
             // call the database seed method to insert test data
-            seeder.SeedUsers();
+            //seeder.SeedUsers();
 
             // enable cross domain calls to API (everything is permitted)
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-
+            app.UseRouting();
             // abilita l'autenticazione per le chiamata ai metodi delle API
             app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+                endpoints.MapFallbackToController("Index", "Fallback");
+            });
+            /*
             app.UseMvc(routes => {
                 routes.MapSpaFallbackRoute(
                     name: "spa-fallback",
                     defaults: new { controller = "Fallback", action = "Index" }
                 );
             });
+            */
         }
     }
 }
